@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <RootNamespace>OD_Trade_Mission_Tracker</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Images\logo.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Images\logo.png" />
+    <None Remove="Images\Wing.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Images\logo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EliteJournalReader\EliteJournalReader\EliteJournalReader.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\logo.png" />
+    <Resource Include="Images\Wing.png" />
+  </ItemGroup>
+
+</Project>

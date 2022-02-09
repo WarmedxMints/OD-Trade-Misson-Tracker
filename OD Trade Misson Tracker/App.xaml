@@ -1,0 +1,20 @@
+﻿<Application x:Class="OD_Trade_Mission_Tracker.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:OD_Trade_Mission_Tracker"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/DefaultColours.xaml" />
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/ComboBoxStyle.xaml" />
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/TitleBarStyle.xaml" />
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/DataGridStyle.xaml" />
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/ButtonStyle.xaml" />
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/MenuStyles.xaml" />
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/ScrollBarStyle.xaml" />
+                <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/RepeatButtonStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
