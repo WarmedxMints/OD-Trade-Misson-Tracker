@@ -20,7 +20,7 @@
         Height="{Binding Settings.Values.LastWindowPos.Height, Mode=TwoWay}"
         Width="{Binding Settings.Values.LastWindowPos.Width, Mode=TwoWay}"
         StateChanged="MainWindowStateChangeRaised"
-        Title="OD TRADE MISSION TRACKER v1.0"
+        Title="OD TRADE MISSION TRACKER v1.1"
         FontSize="16"
         x:Name="Root">
     <WindowChrome.WindowChrome>
@@ -131,9 +131,9 @@
                 <RowDefinition Height="30" />
                 <RowDefinition Height="20" />
                 <RowDefinition Height="40" />
-                <RowDefinition Height="505" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="20" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="20" />
             </Grid.RowDefinitions>
 
@@ -332,7 +332,7 @@
                           IsHitTestVisible="True"
                           HorizontalAlignment="Left"
                           Loaded="MissionDataGrid_Loaded"
-                          Height="505"
+                          VerticalAlignment="Top"
                           EnableRowVirtualization="True"
                           EnableColumnVirtualization="True"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
@@ -495,12 +495,12 @@
                                     <Setter Property="VerticalAlignment"
                                             Value="Center" />
                                     <Setter Property="Text"
-                                            Value="{Binding Expiry, StringFormat={}{0:ddd\, MMM d\, hh:mm}}" />
+                                            Value="{Binding Expiry, StringFormat={}{0:ddd\, MMM d\, HH:mm}}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ElementName=Root, Path=Settings.Values.ViewDisplayMode}"
                                                      Value="{x:Static settings:DisplayMode.Completed}">
                                             <Setter Property="Text"
-                                                    Value="{Binding Path=Expiry, StringFormat={}{0:ddd\, MMM d yyyy\, hh:mm}}" />
+                                                    Value="{Binding Path=Expiry, StringFormat={}{0:ddd\, MMM d yyyy\, HH:mm}}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -576,6 +576,13 @@
             </Grid>
             <!--#endregion-->
 
+            <GridSplitter Grid.Row="4"
+                          Grid.Column="0"
+                          Grid.ColumnSpan="3"
+                          Height="5"
+                          HorizontalAlignment="Stretch"
+                          Background="{DynamicResource Foreground}" />
+            
             <!--#region Bottom Row-->
             <Grid Grid.Row="5"
                   Grid.Column="1">

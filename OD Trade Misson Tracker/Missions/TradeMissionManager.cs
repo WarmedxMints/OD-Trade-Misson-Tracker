@@ -275,19 +275,15 @@ namespace OD_Trade_Mission_Tracker.Missions
             {
                 return;
             }
-
             Missions.RemoveFromCollection(missionData);
             HasDeliveries = Missions.Any(x => x.MissionType == MissionType.Delivery);
             UpdateCommoditiesStack(missionData.Commodity);
             UpdateTotals();
+
+
             TradeStackInfo stack = StackInfo.FirstOrDefault(x => x.SystemName == missionData.SourceSystem && x.StationName == missionData.SourceStation);
 
-            if (stack is null)
-            {
-                return;
-            }
-
-            if (stack.Missions.Contains(missionData))
+            if (stack is not null && stack.Missions.Contains(missionData))
             {
                 stack.Missions.Remove(missionData);
                 //if we have no mission left at that station, remove the collection
@@ -332,8 +328,14 @@ namespace OD_Trade_Mission_Tracker.Missions
         {
             TradeStackCommodity stackCommodity = CommoditiesStack.FirstOrDefault(x => x.CommodityName == commodity);
 
-            if (stackCommodity is null || Missions is null || Missions.Count == 0)
+            if (stackCommodity is null)
             {
+                return;
+            }
+
+            if (Missions is null || Missions.Count == 0)
+            {
+                CommoditiesStack.RemoveFromCollection(stackCommodity);
                 return;
             }
 

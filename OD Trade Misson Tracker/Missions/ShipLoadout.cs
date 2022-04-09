@@ -20,7 +20,7 @@ namespace OD_Trade_Mission_Tracker.Missions
         private int cargoCapacity;
         private int usedCapacity;
 
-        public string ShipType { get => shipType; set { shipType = SetShipType(value); OnPropertyChanged(); } }
+        public string ShipType { get => shipType; set { shipType = ItemInfo.GetShipName(value); OnPropertyChanged(); } }
         public string ShipName { get => shipName; set { shipName = value; OnPropertyChanged(); } }
         public string ShipIdent { get => shipIdent; set { shipIdent = value; OnPropertyChanged(); } }
         public int CargoCapacity { get => cargoCapacity; set { cargoCapacity = value; OnPropertyChanged(); } }
@@ -28,17 +28,6 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         public ObservableCollection<ShipCargo> CurrentCargo { get; set; } = new();
 
-        private static string SetShipType(string name)
-        {
-            if(ItemInfo.ShipIdents.ContainsKey(name))
-            {
-                return ItemInfo.ShipIdents[name];
-            }
-
-            TextInfo textInfo = new CultureInfo("en-GB", false).TextInfo;
-
-            return textInfo.ToTitleCase(name);
-        }
         public void UpdateFromLoadoutEvent(LoadoutEvent.LoadoutEventArgs e)
         {
             ShipType = e.Ship;
@@ -71,7 +60,7 @@ namespace OD_Trade_Mission_Tracker.Missions
 
                 ShipCargo item = new()
                 {
-                    Name = textInfo.ToTitleCase(cargoItem.Name.ToLowerInvariant()),
+                    Name = string.IsNullOrEmpty(cargoItem.Name_Localised) ? textInfo.ToTitleCase(cargoItem.Name.ToLowerInvariant()) : cargoItem.Name_Localised,
                     Count = cargoItem.Count
                 };
 

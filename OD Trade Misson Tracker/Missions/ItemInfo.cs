@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 
 namespace OD_Trade_Mission_Tracker.Missions
 {
@@ -45,5 +46,17 @@ namespace OD_Trade_Mission_Tracker.Missions
             { "viper_mkiv", "Viper Mk IV" },
             { "vulture", "Vulture" },
         };
+
+        public static string GetShipName(string name)
+        {
+            if (ShipIdents.ContainsKey(name))
+            {
+                return ShipIdents[name];
+            }
+
+            TextInfo textInfo = new CultureInfo("en-GB", false).TextInfo;
+
+            return textInfo.ToTitleCase(name.Replace('_', ' ').ToLowerInvariant());
+        }
     }
 }
