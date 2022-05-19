@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\btn_donate_LG.png" />
     <None Remove="Images\logo.png" />
     <None Remove="Images\Wing.png" />
   </ItemGroup>
@@ -26,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Images\btn_donate_LG.png" />
     <Resource Include="Images\logo.png" />
     <Resource Include="Images\Wing.png" />
   </ItemGroup>

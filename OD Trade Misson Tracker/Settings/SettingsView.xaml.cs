@@ -1,6 +1,7 @@
 ﻿using OD_Trade_Mission_Tracker.CustomMessageBox;
 using OD_Trade_Mission_Tracker.Missions;
 using Ookii.Dialogs.Wpf;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 
@@ -94,6 +95,15 @@ namespace OD_Trade_Mission_Tracker.Settings
         private void ClearJournalFolder_Click(object sender, RoutedEventArgs e)
         {
             ApplicationSettings.Values.CustomJournalPath = null;
+        }
+
+        private void PayPalDonateButton_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessStartInfo psi = new();
+            psi.UseShellExecute = true;
+            psi.FileName = "https://www.paypal.com/donate/?business=UPEJS3PN7H4XJ&no_recurring=0&item_name=Creator+of+OD+Software.+Thank+you+for+your+donation.&currency_code=GBP";
+            _ = Process.Start(psi);
+            e.Handled = true;
         }
     }
 }
