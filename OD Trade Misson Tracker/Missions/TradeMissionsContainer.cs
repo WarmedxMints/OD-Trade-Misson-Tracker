@@ -27,7 +27,7 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         private static readonly string clipboarDataSaveFile = Path.Combine(Directory.GetCurrentDirectory(), "Data", "MissionSourceClipboard.json");
 
-        private readonly string[] validMissionNames = new string[] { "Mission_Collect", "Mission_Delivery", "Mission_Mining" };
+        private readonly string[] validMissionNames = new string[] { "Mission_Collect", "Mission_Delivery", "Mission_Mining", "Mission_Altruism" };
 
         private Dictionary<long, TradeMissionData> horizonMissionsData, odysseyMissionsData;
 

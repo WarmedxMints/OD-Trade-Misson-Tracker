@@ -20,7 +20,7 @@
         Height="{Binding Settings.Values.LastWindowPos.Height, Mode=TwoWay}"
         Width="{Binding Settings.Values.LastWindowPos.Width, Mode=TwoWay}"
         StateChanged="MainWindowStateChangeRaised"
-        Title="OD TRADE MISSION TRACKER v1.1"
+        Title="OD TRADE MISSION TRACKER v1.2"
         FontSize="16"
         x:Name="Root">
     <WindowChrome.WindowChrome>
@@ -131,9 +131,9 @@
                 <RowDefinition Height="30" />
                 <RowDefinition Height="20" />
                 <RowDefinition Height="40" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="20" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="20" />
             </Grid.RowDefinitions>
 
