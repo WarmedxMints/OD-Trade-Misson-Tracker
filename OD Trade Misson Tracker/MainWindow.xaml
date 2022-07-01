@@ -20,7 +20,7 @@
         Height="{Binding Settings.Values.LastWindowPos.Height, Mode=TwoWay}"
         Width="{Binding Settings.Values.LastWindowPos.Width, Mode=TwoWay}"
         StateChanged="MainWindowStateChangeRaised"
-        Title="OD TRADE MISSION TRACKER v1.2"
+        Title="OD TRADE MISSION TRACKER v1.3"
         FontSize="16"
         x:Name="Root">
     <WindowChrome.WindowChrome>
@@ -131,9 +131,11 @@
                 <RowDefinition Height="30" />
                 <RowDefinition Height="20" />
                 <RowDefinition Height="40" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="*" 
+                               MinHeight="40"/>
                 <RowDefinition Height="20" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="*"
+                               MinHeight="40" />
                 <RowDefinition Height="20" />
             </Grid.RowDefinitions>
 
@@ -328,6 +330,7 @@
                 <!--#region Mission Data-->
                 <DataGrid ItemsSource="{Binding ViewSource.View}"
                           x:Name="MissionDataGrid"
+                          Margin="5"
                           Grid.Column="2"
                           IsHitTestVisible="True"
                           HorizontalAlignment="Left"
@@ -337,7 +340,7 @@
                           EnableColumnVirtualization="True"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                           VirtualizingPanel.IsVirtualizingWhenGrouping="True"
-                          PreviewMouseLeftButtonDown="DataGrid_PreviewMouseLeftButtonDown"
+                          SelectionChanged="MissionDataGrid_SelectionChanged"
                           PreviewMouseRightButtonDown="DataGrid_PreviewMouseRightButtonDown"
                           ContextMenuClosing="MissionDataGrid_ContextMenuClosing"
                           RowStyle="{DynamicResource HighlightRowWithContextMenu}"

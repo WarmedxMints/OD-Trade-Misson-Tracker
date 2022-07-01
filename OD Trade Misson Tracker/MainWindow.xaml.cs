@@ -103,6 +103,7 @@ namespace OD_Trade_Mission_Tracker
             Dispatcher.Invoke(() =>
             {
                 ViewSource.Source = MissionsContainer.CurrentManager.Missions;
+
                 SortMissionDataGrid();
             });
         }
@@ -120,7 +121,7 @@ namespace OD_Trade_Mission_Tracker
             MissionsContainer?.SetCurrentManager();
 
             ViewSource.Source = MissionsContainer?.CurrentManager.Missions;
-           
+
             SortMissionDataGrid();
         }
 
@@ -266,11 +267,6 @@ namespace OD_Trade_Mission_Tracker
             e.Handled = true;
         }
 
-        private void DataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            e.Handled = true;
-        }
-
         private void DataGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is DataGrid grid)
@@ -326,6 +322,14 @@ namespace OD_Trade_Mission_Tracker
             SettingsView settingsView = new(Settings, MissionsContainer);
             settingsView.Owner = this;
             settingsView.ShowDialog();
+        }
+
+        private void MissionDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(sender is DataGrid grid)
+            {
+                grid.UnselectAll();
+            }
         }
     }
 }
