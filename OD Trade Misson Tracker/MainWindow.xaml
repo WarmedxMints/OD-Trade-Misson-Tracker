@@ -20,7 +20,7 @@
         Height="{Binding Settings.Values.LastWindowPos.Height, Mode=TwoWay}"
         Width="{Binding Settings.Values.LastWindowPos.Width, Mode=TwoWay}"
         StateChanged="MainWindowStateChangeRaised"
-        Title="OD TRADE MISSION TRACKER v1.3"
+        Title="{Binding Source={StaticResource AppVersion}, StringFormat={}OD Trade Mission Tracker v{0}}"
         FontSize="16"
         x:Name="Root">
     <WindowChrome.WindowChrome>
@@ -101,7 +101,7 @@
         <utils:DisplyModeToVisibilty x:Key="DisplayModeToVis" />
         <utils:DisplyModeToVisibiltyReversed x:Key="DisplayModeToVisReversed" />
         <utils:EnumDescriptionConverter x:Key="EnumDesc" />
-        
+        <utils:RemainingToColourConvertor x:Key="RemaingConvertor" />
         <ObjectDataProvider x:Key="DisplayModeEnum"
                             MethodName="GetValues"
                             ObjectType="{x:Type System:Enum}">
@@ -659,7 +659,7 @@
                                             <DataGridTextColumn Header="# REM"
                                                                 MinWidth="50"
                                                                 Width="SizeToCells"
-                                                                ElementStyle="{DynamicResource DataGridElementRight}"
+                                                                ElementStyle="{DynamicResource DataGridElementRightRemaining}"
                                                                 Visibility="{Binding Source={StaticResource MissionsSelected}, Path=Value, Converter={StaticResource DisplayModeToVisReversed}, ConverterParameter=Completed}"
                                                                 Binding="{Binding Path=AmountRemaining, StringFormat={}{0:N0}}" />
 
@@ -772,6 +772,7 @@
                     </Grid.RowDefinitions>
                     <DataGrid Grid.Row="0"
                               Loaded="DataGrid_Loaded"
+                              x:Name="CommodGrid"
                               ItemsSource="{Binding MissionsContainer.CurrentManager.CommoditiesStack}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="COMMODITY"
@@ -802,9 +803,9 @@
                             <DataGridTextColumn Header="# REM"
                                                 MinWidth="50"
                                                 Width="SizeToCells"
-                                                ElementStyle="{DynamicResource DataGridElementRight}"
+                                                ElementStyle="{DynamicResource DataGridElementRightRemaining}"
                                                 Visibility="{Binding Source={StaticResource MissionsSelected}, Path=Value, Converter={StaticResource DisplayModeToVisReversed}, ConverterParameter=Completed}"
-                                                Binding="{Binding Path=AmountRemaining, StringFormat={}{0:N0}}" />
+                                                Binding="{Binding AmountRemaining, StringFormat={}{0:N0}}" />
 
                             <DataGridTextColumn Header="VALUE"
                                                 MinWidth="90"
@@ -829,24 +830,34 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                
                             <TextBlock Grid.Column="0"
                                        Grid.Row="0" 
                                        Margin="0,0,10,0"
-                                       Text="{Binding MissionsContainer.CurrentManager.TotalCommodities, StringFormat={}Total Count : {0:N0} t}"/>
+                                       Text="{Binding MissionsContainer.CurrentManager.TotalCommodities, StringFormat={}Total Count             : {0:N0} t}"/>
                         <TextBlock Grid.Column="1"
                                    Grid.Row="0"
-                                   Text="{Binding MissionsContainer.CurrentManager.TotalMissionCount, StringFormat={}Total Missions : {0:N0}}" />
+                                   Text="{Binding MissionsContainer.CurrentManager.TotalMissionCount, StringFormat={}Total Missions                : {0:N0}}" />
 
                         <TextBlock Grid.Column="0"
                                    Grid.Row="1"
                                    Margin="0,0,10,0"
-                                   Text="{Binding MissionsContainer.CurrentManager.TotalMissionValue, StringFormat={}Total Value : {0:N0} cr}"/>
+                                   Text="{Binding MissionsContainer.CurrentManager.TotalMissionValue, StringFormat={}Total Value              : {0:N0} cr}"/>
                         <TextBlock Grid.Column="1"
                                    Grid.Row="1"
-                                   Text="{Binding MissionsContainer.CurrentManager.TotalShareValue, StringFormat={}Shareable Value : {0:N0} cr}"/>
-                
+                                   Text="{Binding MissionsContainer.CurrentManager.TotalShareValue, StringFormat={}Shareable Value             : {0:N0} cr}"/>
+
+
+                        <TextBlock Grid.Column="0"
+                                   Grid.Row="2"
+                                   Margin="0,0,10,0"
+                                   Text="{Binding MissionsContainer.CurrentManager.TotalTurnInValue, StringFormat={}Total Turn In Value  : {0:N0} cr}" />
+                        <TextBlock Grid.Column="1"
+                                   Grid.Row="2"
+                                   Text="{Binding MissionsContainer.CurrentManager.TotalShareableTurnInValue, StringFormat={}Shareable Turn In Value : {0:N0} cr}" />
+
                     </Grid>
                 </Grid>
             </Grid>

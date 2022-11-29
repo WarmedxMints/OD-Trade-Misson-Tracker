@@ -17,6 +17,8 @@ namespace OD_Trade_Mission_Tracker.Missions
         private int totalMissionCount;
         private ulong totalMissionValue;
         private ulong totalShareValue;
+        private ulong totalTurnInValue;
+        private ulong totalShareableTurnInValue;
         public bool HasDeliveries { get => hasDeliveries; set { hasDeliveries = value; OnPropertyChanged(); } }
         public ObservableCollection<TradeMissionData> Missions { get => missions; set { missions = value; OnPropertyChanged(); } }
         public ObservableCollection<TradeStackInfo> StackInfo { get => stackInfo; set { stackInfo = value; OnPropertyChanged(); } }
@@ -24,6 +26,8 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         public ulong TotalShareValue { get => totalShareValue; set { totalShareValue = value; OnPropertyChanged(); } }
         public ulong TotalMissionValue { get => totalMissionValue; set { totalMissionValue = value; OnPropertyChanged(); } }
+        public ulong TotalTurnInValue { get => totalTurnInValue; set { totalTurnInValue = value; OnPropertyChanged(); } }
+        public ulong TotalShareableTurnInValue { get => totalShareableTurnInValue; set { totalShareableTurnInValue = value; OnPropertyChanged(); } }
         public int TotalMissionCount { get => totalMissionCount; set { totalMissionCount = value; OnPropertyChanged(); } }
         public long TotalCommodities { get => totalCommodities; set { totalCommodities = value; OnPropertyChanged(); } }
 
@@ -231,7 +235,7 @@ namespace OD_Trade_Mission_Tracker.Missions
                 stackCommodity.ValuePerTonne = Helpers.SafeDivision((long)missionsValue, (long)amountToDeliver);
                 stackCommodity.MissionCount = missionCount;
             }
-           
+
             Missions = new(missions);
             StackInfo = new(stackInfo);
             CommoditiesStack = new(tradeStacks);
@@ -375,12 +379,14 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         private void UpdateTotals()
         {
-            if(Missions == null || Missions.Count == 0)
+            if (Missions == null || Missions.Count == 0)
             {
                 TotalCommodities = 0;
                 TotalMissionCount = 0;
                 TotalMissionValue = 0;
                 TotalShareValue = 0;
+                TotalTurnInValue = 0;
+                TotalShareableTurnInValue = 0;
                 return;
             }
 
@@ -388,6 +394,8 @@ namespace OD_Trade_Mission_Tracker.Missions
             int totalMissionCount = 0;
             ulong totalMissionValue = 0;
             ulong totalShareValue = 0;
+            ulong totalTurninValue = 0;
+            ulong totalShareableTurnInValue = 0;
 
             for (int i = 0; i < Missions.Count; i++)
             {
@@ -401,8 +409,16 @@ namespace OD_Trade_Mission_Tracker.Missions
                 totalCommodities += tradeMissionData.Count;
                 totalMissionCount++;
                 totalMissionValue += (ulong)tradeMissionData.Reward;
-                
-                if(tradeMissionData.WingMission)
+
+                if (tradeMissionData.ItemsToDeliverRemaining <= 0)
+                {
+                    if (tradeMissionData.WingMission)
+                    {
+                        totalShareableTurnInValue += (ulong)tradeMissionData.Reward;
+                    }
+                    totalTurninValue += (ulong)tradeMissionData.Reward;
+                }
+                if (tradeMissionData.WingMission)
                 {
                     totalShareValue += (ulong)tradeMissionData.Reward;
                 }
@@ -412,6 +428,8 @@ namespace OD_Trade_Mission_Tracker.Missions
             TotalMissionCount = totalMissionCount;
             TotalMissionValue = totalMissionValue;
             TotalShareValue = totalShareValue;
+            TotalTurnInValue = totalTurninValue;
+            TotalShareableTurnInValue = totalShareableTurnInValue;
         }
 
         public void ClearData()

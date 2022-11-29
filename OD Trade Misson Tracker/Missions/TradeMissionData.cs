@@ -30,7 +30,7 @@ namespace OD_Trade_Mission_Tracker.Missions
             DestinationSystem = e.DestinationSystem;
             DestinationStation = e.DestinationStation;
             WingMission = e.Wing;
-            OdysseyMission = container.Odyssey;
+            OdysseyMission = container.CurrentGameMode == TradeMissionsContainer.GameVersion.Odyssey;
             Reward = e.Reward;
             this.container = container;
 

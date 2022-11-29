@@ -10,17 +10,27 @@ using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.Design;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using DisplayMode = OD_Trade_Mission_Tracker.Settings.DisplayMode;
 
 namespace OD_Trade_Mission_Tracker.Missions
 {
     public class TradeMissionsContainer : PropertyChangeNotify
     {
+        public enum GameVersion
+        {
+            Legacy,
+            Horizons,
+            Odyssey
+        }
+
         #region Private Values
+        private string LegacyDataSaveFile => Path.Combine(Directory.GetCurrentDirectory(), "Data", $"[{CommanderFID}] Legacy.json");
         private string HorizonDataSaveFile => Path.Combine(Directory.GetCurrentDirectory(), "Data", $"[{CommanderFID}] HorizonsMissions.json");
         private string OdysseyDataSaveFile => Path.Combine(Directory.GetCurrentDirectory(), "Data", $"[{CommanderFID}] OdysseyMissions.json");
         private string MarketDataSaveFile => Path.Combine(Directory.GetCurrentDirectory(), "Data", $"[{CommanderFID}] MarketData.json");
@@ -29,7 +39,7 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         private readonly string[] validMissionNames = new string[] { "Mission_Collect", "Mission_Delivery", "Mission_Mining", "Mission_Altruism" };
 
-        private Dictionary<long, TradeMissionData> horizonMissionsData, odysseyMissionsData;
+        private Dictionary<long, TradeMissionData> legacyMissionData, horizonMissionsData, odysseyMissionsData;
 
         private readonly AppSettings appSettings;
         #endregion
@@ -37,8 +47,11 @@ namespace OD_Trade_Mission_Tracker.Missions
         #region Properties and Constructor
         public JournalWatcher JournalWatcher { get; private set; }
         public string CommanderFID => appSettings.CurrentCommander?.FID;
-        public bool Odyssey { get; private set; }
+        //public bool Odyssey { get; private set; }
+        //public bool Legacy { get; private set; }
+        public GameVersion CurrentGameMode { get; set; }
 
+        private TradeMissionManager legacyMissions = new();
         private TradeMissionManager horizonMissions = new();
         private TradeMissionManager odysseyMissions = new();
         private TradeMissionManager completedMissions = new();
@@ -48,6 +61,7 @@ namespace OD_Trade_Mission_Tracker.Missions
         private ObservableCollection<CommodityData> commodities = new();
         private ObservableCollection<MissionSourceClipboardData> missionSourceClipboards = new();
 
+        public TradeMissionManager LegacyMissions { get => legacyMissions; set { legacyMissions = value; OnPropertyChanged(); } }
         public TradeMissionManager HorizionMissions { get => horizonMissions; set { horizonMissions = value; OnPropertyChanged(); } }
         public TradeMissionManager OdysseyMissions { get => odysseyMissions; set { odysseyMissions = value; OnPropertyChanged(); } }
         public TradeMissionManager CompletedMissions { get => completedMissions; set { completedMissions = value; OnPropertyChanged(); } }
@@ -59,6 +73,7 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         public TradeMissionManager CurrentManager => appSettings.Values.ViewDisplayMode switch
         {
+            DisplayMode.Legacy => LegacyMissions,
             DisplayMode.Horizons => HorizionMissions,
             DisplayMode.Odyssey => OdysseyMissions,
             DisplayMode.Completed => CompletedMissions,
@@ -74,10 +89,10 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         #region Init and Events
         public void Init()
-        {          
+        {
             SetCurrentManager();
 
-            RestartWatcher();       
+            RestartWatcher();
         }
 
         public void RestartWatcher()
@@ -132,6 +147,8 @@ namespace OD_Trade_Mission_Tracker.Missions
         {
             JournalWatcher.GetEvent<FileheaderEvent>()?.AddHandler(OnFileHeaderEvent);
 
+            JournalWatcher.GetEvent<LoadGameEvent>()?.AddHandler(OnLoadGameEvent);
+
             JournalWatcher.GetEvent<LocationEvent>()?.AddHandler(OnLocationEvent);
 
             JournalWatcher.GetEvent<DockedEvent>()?.AddHandler(OnDockedAtStation);
@@ -166,6 +183,8 @@ namespace OD_Trade_Mission_Tracker.Missions
         private void UnSubscribeFromEvents()
         {
             JournalWatcher.GetEvent<FileheaderEvent>()?.RemoveHandler(OnFileHeaderEvent);
+
+            JournalWatcher.GetEvent<LoadGameEvent>()?.RemoveHandler(OnLoadGameEvent);
 
             JournalWatcher.GetEvent<LocationEvent>()?.RemoveHandler(OnLocationEvent);
 
@@ -205,7 +224,29 @@ namespace OD_Trade_Mission_Tracker.Missions
                 return;
             }
 
-            Odyssey = e.Odyssey;
+            if (e.gameversion.StartsWith("3.8"))
+            {
+                CurrentGameMode = GameVersion.Legacy;
+                return;
+            }
+
+            CurrentGameMode = GameVersion.Odyssey;
+        }
+
+        private void OnLoadGameEvent(object sender, LoadGameEvent.LoadGameEventArgs e)
+        {
+            if (JournalWatcher.ReadingHistory)
+            {
+                return;
+            }
+
+            if (e.Odyssey)
+            {
+                CurrentGameMode = GameVersion.Odyssey;
+                return;
+            }
+
+            CurrentGameMode = GameVersion.Horizons;
         }
 
         private void OnLocationEvent(object sender, LocationEvent.LocationEventArgs e)
@@ -279,9 +320,27 @@ namespace OD_Trade_Mission_Tracker.Missions
             TradeMissionData missionData = new(e, currentStation, this);
             missionData.CurrentState = MissionState.Active;
 
-            TradeMissionManager manager = Odyssey ? OdysseyMissions : HorizionMissions;
+            TradeMissionManager manager;
+            Dictionary<long, TradeMissionData> missionDictionary;
 
-            AddMissionToDictionary(ref Odyssey ? ref odysseyMissionsData : ref horizonMissionsData, missionData);
+            switch (CurrentGameMode)
+            {
+                case GameVersion.Legacy:
+                    manager = LegacyMissions;
+                    missionDictionary = legacyMissionData;
+                    break;
+                case GameVersion.Horizons:
+                    manager = HorizionMissions;
+                    missionDictionary = horizonMissionsData;
+                    break;
+                default:
+                case GameVersion.Odyssey:
+                    manager = OdysseyMissions;
+                    missionDictionary = odysseyMissionsData;
+                    break;
+            }
+
+            AddMissionToDictionary(ref missionDictionary, missionData);
             AddMissionToGui(manager, missionData);
 
             SaveData();
@@ -294,21 +353,33 @@ namespace OD_Trade_Mission_Tracker.Missions
                 return;
             }
 
-            if (Odyssey ? odysseyMissionsData is null || !odysseyMissionsData.ContainsKey(e.MissionID) : horizonMissionsData is null || !horizonMissionsData.ContainsKey(e.MissionID))
+            TradeMissionManager manager;
+            Dictionary<long, TradeMissionData> missionDictionary;
+
+            switch (CurrentGameMode)
+            {
+                case GameVersion.Legacy:
+                    manager = LegacyMissions;
+                    missionDictionary = legacyMissionData;
+                    break;
+                case GameVersion.Horizons:
+                    manager = HorizionMissions;
+                    missionDictionary = horizonMissionsData;
+                    break;
+                default:
+                case GameVersion.Odyssey:
+                    manager = OdysseyMissions;
+                    missionDictionary = odysseyMissionsData;
+                    break;
+            }
+
+            if (missionDictionary is null || !missionDictionary.ContainsKey(e.MissionID))
             {
                 return;
             }
 
-            if (Odyssey)
-            {
-                odysseyMissionsData[e.MissionID].CurrentState = MissionState.Redirected;
-                OdysseyMissions.UpdateMission(odysseyMissionsData[e.MissionID]);
-                SaveData();
-                return;
-            }
-
-            horizonMissionsData[e.MissionID].CurrentState = MissionState.Redirected;
-            HorizionMissions.UpdateMission(odysseyMissionsData[e.MissionID]);
+            missionDictionary[e.MissionID].CurrentState = MissionState.Redirected;
+            manager.UpdateMission(odysseyMissionsData[e.MissionID]);
             SaveData();
         }
 
@@ -319,23 +390,35 @@ namespace OD_Trade_Mission_Tracker.Missions
                 return;
             }
 
-            if (Odyssey ? odysseyMissionsData is null || !odysseyMissionsData.ContainsKey(e.MissionID) : horizonMissionsData is null || !horizonMissionsData.ContainsKey(e.MissionID))
+            TradeMissionManager manager;
+            Dictionary<long, TradeMissionData> missionDictionary;
+
+            switch (CurrentGameMode)
+            {
+                case GameVersion.Legacy:
+                    manager = LegacyMissions;
+                    missionDictionary = legacyMissionData;
+                    break;
+                case GameVersion.Horizons:
+                    manager = HorizionMissions;
+                    missionDictionary = horizonMissionsData;
+                    break;
+                default:
+                case GameVersion.Odyssey:
+                    manager = OdysseyMissions;
+                    missionDictionary = odysseyMissionsData;
+                    break;
+            }
+
+            if (missionDictionary is null || !missionDictionary.ContainsKey(e.MissionID))
             {
                 return;
             }
 
             TradeMissionData missionData;
 
-            if (Odyssey)
-            {
-                missionData = odysseyMissionsData[e.MissionID];
-                OdysseyMissions.RemoveMission(missionData);
-            }
-            else
-            {
-                missionData = horizonMissionsData[e.MissionID];
-                HorizionMissions.RemoveMission(missionData);
-            }
+            missionData = missionDictionary[e.MissionID];
+            manager.RemoveMission(missionData);
 
             missionData.CurrentState = MissionState.Completed;
             missionData.Reward = e.Reward;
@@ -351,23 +434,35 @@ namespace OD_Trade_Mission_Tracker.Missions
                 return;
             }
 
-            if (Odyssey ? odysseyMissionsData is null || !odysseyMissionsData.ContainsKey(e.MissionID) : horizonMissionsData is null || !horizonMissionsData.ContainsKey(e.MissionID))
+            TradeMissionManager manager;
+            Dictionary<long, TradeMissionData> missionDictionary;
+
+            switch (CurrentGameMode)
+            {
+                case GameVersion.Legacy:
+                    manager = LegacyMissions;
+                    missionDictionary = legacyMissionData;
+                    break;
+                case GameVersion.Horizons:
+                    manager = HorizionMissions;
+                    missionDictionary = horizonMissionsData;
+                    break;
+                default:
+                case GameVersion.Odyssey:
+                    manager = OdysseyMissions;
+                    missionDictionary = odysseyMissionsData;
+                    break;
+            }
+
+            if (missionDictionary is null || !missionDictionary.ContainsKey(e.MissionID))
             {
                 return;
             }
 
             TradeMissionData missionData;
 
-            if (Odyssey)
-            {
-                missionData = odysseyMissionsData[e.MissionID];
-                OdysseyMissions.RemoveMission(missionData);
-            }
-            else
-            {
-                missionData = horizonMissionsData[e.MissionID];
-                HorizionMissions.RemoveMission(missionData);
-            }
+            missionData = missionDictionary[e.MissionID];
+            manager.RemoveMission(missionData);
 
             missionData.CurrentState = MissionState.Abandonded;
             missionData.Reward = 0;
@@ -383,7 +478,28 @@ namespace OD_Trade_Mission_Tracker.Missions
                 return;
 
             }
-            if (Odyssey ? odysseyMissionsData is null || !odysseyMissionsData.ContainsKey(e.MissionID) : horizonMissionsData is null || !horizonMissionsData.ContainsKey(e.MissionID))
+
+            TradeMissionManager manager;
+            Dictionary<long, TradeMissionData> missionDictionary;
+
+            switch (CurrentGameMode)
+            {
+                case GameVersion.Legacy:
+                    manager = LegacyMissions;
+                    missionDictionary = legacyMissionData;
+                    break;
+                case GameVersion.Horizons:
+                    manager = HorizionMissions;
+                    missionDictionary = horizonMissionsData;
+                    break;
+                default:
+                case GameVersion.Odyssey:
+                    manager = OdysseyMissions;
+                    missionDictionary = odysseyMissionsData;
+                    break;
+            }
+
+            if (missionDictionary is null || !missionDictionary.ContainsKey(e.MissionID))
             {
                 return;
             }
@@ -391,16 +507,8 @@ namespace OD_Trade_Mission_Tracker.Missions
 
             TradeMissionData missionData;
 
-            if (Odyssey)
-            {
-                missionData = odysseyMissionsData[e.MissionID];
-                OdysseyMissions.RemoveMission(missionData);
-            }
-            else
-            {
-                missionData = horizonMissionsData[e.MissionID];
-                HorizionMissions.RemoveMission(missionData);
-            }
+            missionData = missionDictionary[e.MissionID];
+            manager.RemoveMission(missionData);
 
             missionData.CurrentState = MissionState.Failed;
             missionData.Reward = 0;
@@ -506,18 +614,35 @@ namespace OD_Trade_Mission_Tracker.Missions
                 return;
             }
 
-            Dictionary<long, TradeMissionData> dict = Odyssey ? odysseyMissionsData : horizonMissionsData;
+            TradeMissionManager manager;
+            Dictionary<long, TradeMissionData> missionDictionary;
 
-            if (dict.ContainsKey(e.MissionID) == false)
+            switch (CurrentGameMode)
+            {
+                case GameVersion.Legacy:
+                    manager = LegacyMissions;
+                    missionDictionary = legacyMissionData;
+                    break;
+                case GameVersion.Horizons:
+                    manager = HorizionMissions;
+                    missionDictionary = horizonMissionsData;
+                    break;
+                default:
+                case GameVersion.Odyssey:
+                    manager = OdysseyMissions;
+                    missionDictionary = odysseyMissionsData;
+                    break;
+            }
+
+            if (missionDictionary is null || !missionDictionary.ContainsKey(e.MissionID))
             {
                 return;
             }
 
-            dict[e.MissionID].ItemsCollected = e.ItemsCollected;
-            dict[e.MissionID].ItemsDelivered = e.ItemsDelivered;
+            missionDictionary[e.MissionID].ItemsCollected = e.ItemsCollected;
+            missionDictionary[e.MissionID].ItemsDelivered = e.ItemsDelivered;
 
-            TradeMissionManager manager = Odyssey ? OdysseyMissions : HorizionMissions;
-            manager.UpdateMission(dict[e.MissionID]);
+            manager.UpdateMission(missionDictionary[e.MissionID]);
         }
 
         private void OnCargo(object sender, CargoEvent.CargoEventArgs e)
@@ -635,11 +760,13 @@ namespace OD_Trade_Mission_Tracker.Missions
             CompletedMissions.AddMissions(compeletedMissions);
         }
 
-        internal void ProcessHistory(Dictionary<long, TradeMissionData> horizonMissions, Dictionary<long, TradeMissionData> odysseyMissions, List<CommodityData> commodities, IProgress<string> progress)
+        internal void ProcessHistory(Dictionary<long, TradeMissionData> legacyMissions, Dictionary<long, TradeMissionData> horizonMissions, Dictionary<long, TradeMissionData> odysseyMissions, List<CommodityData> commodities, IProgress<string> progress)
         {
             CompletedMissions.ClearData();
             HorizionMissions.ClearData();
             OdysseyMissions.ClearData();
+            LegacyMissions.ClearData();
+
             Commodities.ClearCollection();
 
             if (commodities is not null)
@@ -650,6 +777,13 @@ namespace OD_Trade_Mission_Tracker.Missions
                 {
                     commodity.Container = this;
                 }
+            }
+
+            if (legacyMissions is not null)
+            {
+                horizonMissionsData = new(legacyMissions);
+                progress.Report("Legacy Missions");
+                ProcessDictionary(legacyMissions, LegacyMissions);
             }
 
             if (horizonMissions is not null)
@@ -817,6 +951,11 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         private TradeMissionManager GetMissionsManager(TradeMissionData missionData)
         {
+            if (legacyMissions.Missions.Contains(missionData))
+            {
+                return legacyMissions;
+            }
+
             if (horizonMissions.Missions.Contains(missionData))
             {
                 return horizonMissions;
@@ -879,6 +1018,14 @@ namespace OD_Trade_Mission_Tracker.Missions
             CompletedMissions.ClearData();
             HorizionMissions.ClearData();
             OdysseyMissions.ClearData();
+            LegacyMissions.ClearData();
+
+            legacyMissionData = LoadSaveJson.LoadJson<Dictionary<long, TradeMissionData>>(LegacyDataSaveFile);
+
+            if (legacyMissionData is not null)
+            {
+                ProcessDictionary(legacyMissionData, LegacyMissions);
+            }
 
             horizonMissionsData = LoadSaveJson.LoadJson<Dictionary<long, TradeMissionData>>(HorizonDataSaveFile);
 
@@ -930,6 +1077,7 @@ namespace OD_Trade_Mission_Tracker.Missions
                 return;
             }
 
+            _ = LoadSaveJson.SaveJson(legacyMissionData, LegacyDataSaveFile);
             _ = LoadSaveJson.SaveJson(horizonMissionsData, HorizonDataSaveFile);
             _ = LoadSaveJson.SaveJson(odysseyMissionsData, OdysseyDataSaveFile);
             _ = LoadSaveJson.SaveJson(commodities, MarketDataSaveFile);

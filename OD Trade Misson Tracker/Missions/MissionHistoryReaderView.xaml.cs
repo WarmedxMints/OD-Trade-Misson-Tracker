@@ -58,10 +58,10 @@ namespace OD_Trade_Mission_Tracker.Missions
             {
                 MissionHistoryBuilder builder = new(container.JournalWatcher, container.CommanderFID);
 
-                Tuple<Dictionary<long, TradeMissionData>, Dictionary<long, TradeMissionData>, List<CommodityData>> ret = await Task.Run(() => builder.GetHistory(progress, container));
+                Tuple<Dictionary<long, TradeMissionData>, Dictionary<long, TradeMissionData>, Dictionary<long, TradeMissionData>, List<CommodityData>> ret = await Task.Run(() => builder.GetHistory(progress, container));
                 TitleText.Text = "Processing Journal File : ";
                 TitleText.Text = "Processing : ";
-                await Task.Run(() => container.ProcessHistory(ret.Item1, ret.Item2, ret.Item3, progress));
+                await Task.Run(() => container.ProcessHistory(ret.Item1, ret.Item2, ret.Item3, ret.Item4, progress));
             }
             catch (OperationCanceledException)
             {
