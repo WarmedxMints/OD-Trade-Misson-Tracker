@@ -47,25 +47,29 @@ namespace OD_Trade_Mission_Tracker.Missions
 
         private void OnFileHeaderEvent(object sender, FileheaderEvent.FileheaderEventArgs e)
         {
-            if (e.gameversion.StartsWith("3.8"))
+            if (e.part != 1)
             {
-                CurrentGameMode = GameVersion.Legacy;
                 return;
             }
 
-            CurrentGameMode = GameVersion.Odyssey;
+            CurrentGameMode = e.Odyssey ? GameVersion.Live : GameVersion.Legacy;
         }
 
-        private void OnLoadGameEvent(object sender, LoadGameEvent.LoadGameEventArgs e)
-        {
-            if (e.Odyssey)
-            {
-                CurrentGameMode = GameVersion.Odyssey;
-                return;
-            }
+        //private void OnLoadGameEvent(object sender, LoadGameEvent.LoadGameEventArgs e)
+        //{
+        //    if (CurrentGameMode == GameVersion.Legacy)
+        //    {
+        //        return;
+        //    }
 
-            CurrentGameMode = GameVersion.Horizons;
-        }
+        //    if (e.Odyssey)
+        //    {
+        //        CurrentGameMode = GameVersion.Odyssey;
+        //        return;
+        //    }
+
+        //    CurrentGameMode = GameVersion.Horizons;
+        //}
 
         private void OnCommanderEvent(object sender, CommanderEvent.CommanderEventArgs e)
         {
@@ -139,25 +143,19 @@ namespace OD_Trade_Mission_Tracker.Missions
             }
 
 
-            TradeMissionData missionData = new(e, currentStation, container);
-            missionData.CurrentState = MissionState.Active;
-            missionData.OdysseyMission = CurrentGameMode == GameVersion.Odyssey;
-
-            Dictionary<long, TradeMissionData> missionDictionary;
-
-            switch (CurrentGameMode)
+            TradeMissionData missionData = new(e, currentStation, container)
             {
-                case GameVersion.Legacy:
-                    missionDictionary = legacyMissionsData;
-                    break;
-                case GameVersion.Horizons:
-                    missionDictionary = horizonMissionsData;
-                    break;
-                default:
-                case GameVersion.Odyssey:
-                    missionDictionary = odysseyMissionsData;
-                    break;
-            }
+                CurrentState = MissionState.Active,
+                OdysseyMission = CurrentGameMode == GameVersion.Live
+            };
+
+            Dictionary<long, TradeMissionData> missionDictionary = CurrentGameMode switch
+            {
+                GameVersion.Legacy => legacyMissionsData,
+                GameVersion.Live => odysseyMissionsData,
+                _ => odysseyMissionsData,
+
+            };
 
             AddMissionToDictionary(ref missionDictionary, missionData);
         }
@@ -190,8 +188,9 @@ namespace OD_Trade_Mission_Tracker.Missions
             Dictionary<long, TradeMissionData> missionDictionary = CurrentGameMode switch
             {
                 GameVersion.Legacy => legacyMissionsData,
-                GameVersion.Horizons => horizonMissionsData,
+                GameVersion.Live => odysseyMissionsData,
                 _ => odysseyMissionsData,
+
             };
 
             if (missionDictionary is null || !missionDictionary.ContainsKey(e.MissionID))
@@ -213,8 +212,9 @@ namespace OD_Trade_Mission_Tracker.Missions
             Dictionary<long, TradeMissionData> dict = CurrentGameMode switch
             {
                 GameVersion.Legacy => legacyMissionsData,
-                GameVersion.Horizons => horizonMissionsData,
+                GameVersion.Live => odysseyMissionsData,
                 _ => odysseyMissionsData,
+
             };
 
             if (dict is null || !dict.ContainsKey(e.MissionID))
@@ -242,8 +242,9 @@ namespace OD_Trade_Mission_Tracker.Missions
             Dictionary<long, TradeMissionData> dict = CurrentGameMode switch
             {
                 GameVersion.Legacy => legacyMissionsData,
-                GameVersion.Horizons => horizonMissionsData,
+                GameVersion.Live => odysseyMissionsData,
                 _ => odysseyMissionsData,
+
             };
 
             TradeMissionData missionData = dict[e.MissionID];
@@ -261,8 +262,9 @@ namespace OD_Trade_Mission_Tracker.Missions
             Dictionary<long, TradeMissionData> dict = CurrentGameMode switch
             {
                 GameVersion.Legacy => legacyMissionsData,
-                GameVersion.Horizons => horizonMissionsData,
+                GameVersion.Live => odysseyMissionsData,
                 _ => odysseyMissionsData,
+
             };
 
             if (dict is null || !dict.ContainsKey(e.MissionID))
@@ -286,8 +288,9 @@ namespace OD_Trade_Mission_Tracker.Missions
             Dictionary<long, TradeMissionData> dict = CurrentGameMode switch
             {
                 GameVersion.Legacy => legacyMissionsData,
-                GameVersion.Horizons => horizonMissionsData,
+                GameVersion.Live => odysseyMissionsData,
                 _ => odysseyMissionsData,
+
             };
 
             if (dict.ContainsKey(e.MissionID) == false)
@@ -413,7 +416,7 @@ namespace OD_Trade_Mission_Tracker.Missions
         {
             watcher.GetEvent<FileheaderEvent>()?.AddHandler(OnFileHeaderEvent);
 
-            watcher.GetEvent<LoadGameEvent>()?.AddHandler(OnLoadGameEvent);
+            //watcher.GetEvent<LoadGameEvent>()?.AddHandler(OnLoadGameEvent);
 
             watcher.GetEvent<CommanderEvent>()?.AddHandler(OnCommanderEvent);
 
@@ -450,7 +453,7 @@ namespace OD_Trade_Mission_Tracker.Missions
         {
             watcher.GetEvent<FileheaderEvent>()?.RemoveHandler(OnFileHeaderEvent);
 
-            watcher.GetEvent<LoadGameEvent>()?.RemoveHandler(OnLoadGameEvent);
+            //watcher.GetEvent<LoadGameEvent>()?.RemoveHandler(OnLoadGameEvent);
 
             watcher.GetEvent<CommanderEvent>()?.RemoveHandler(OnCommanderEvent);
 

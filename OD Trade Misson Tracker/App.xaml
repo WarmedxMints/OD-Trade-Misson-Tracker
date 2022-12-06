@@ -17,7 +17,7 @@
                 <ResourceDictionary Source="/OD Trade Mission Tracker;component/ResourceDictionarys/RepeatButtonStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <System:String x:Key="AppVersion">1.5</System:String>
+            <System:String x:Key="AppVersion">1.5.1</System:String>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

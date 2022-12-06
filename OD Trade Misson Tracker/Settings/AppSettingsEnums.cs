@@ -5,8 +5,7 @@ namespace OD_Trade_Mission_Tracker.Settings
     public enum DisplayMode
     {
         Legacy,
-        Horizons,
-        Odyssey,
+        Live,
         Completed
     }
 
